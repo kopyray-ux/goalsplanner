@@ -1,552 +1,202 @@
 <!DOCTYPE html>
 <html lang="ru">
-<head> 
-<h<link rel="manifest" href="manifest.json">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 
-<meta name="theme-color" content="#ffffff">
+<title>Goal Planner</title>
 
-<link rel="apple-touch-icon" href="icon.png">
+<!-- PWA manifest (inline) -->
+<link rel="manifest" href="data:application/json,{
+  &quot;name&quot;:&quot;Goal Planner&quot;,
+  &quot;short_name&quot;:&quot;Planner&quot;,
+  &quot;start_url&quot;:&quot;.&quot;,
+  &quot;display&quot;:&quot;standalone&quot;,
+  &quot;background_color&quot;:&quot;#ffffff&quot;,
+  &quot;theme_color&quot;:&quot;#111111&quot;,
+  &quot;icons&quot;:[{
+    &quot;src&quot;:&quot;https://cdn-icons-png.flaticon.com/512/1828/1828817.png&quot;,
+    &quot;sizes&quot;:&quot;512x512&quot;,
+    &quot;type&quot;:&quot;image/png&quot;
+  }]
+}" />
 
-<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#111111" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black" />
 
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-
-<meta name="viewport" content="width=device-width, initial-scale=1">ead>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="Мои цели">
-<meta name="theme-color" content="#faf8f5">
-<title>Мои цели</title>
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-body { font-family: -apple-system, system-ui, sans-serif; background: #faf8f5; color: #3a3530; min-height: 100vh; padding-bottom: env(safe-area-inset-bottom); }
-button { cursor: pointer; font-family: inherit; }
-input { font-family: inherit; }
-button:active { transform: scale(0.97); }
-
-#toast {
-  position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-60px);
-  background: #3a3530; color: #fff; padding: 10px 22px; border-radius: 40px;
-  font-size: 14px; z-index: 1000; box-shadow: 0 4px 20px rgba(0,0,0,0.18);
-  transition: transform 0.3s ease; pointer-events: none; white-space: nowrap;
-}
-#toast.show { transform: translateX(-50%) translateY(0); }
-
-.header {
-  background: #fff; border-bottom: 1px solid #ede9e3;
-  padding: 12px 16px; padding-top: calc(12px + env(safe-area-inset-top));
-  display: flex; align-items: center; justify-content: space-between;
-  position: sticky; top: 0; z-index: 100;
-}
-.header-title { font-size: 18px; font-weight: 700; font-family: Georgia, serif; color: #3a3530; }
-.header-date { font-size: 12px; color: #b0aa9f; margin-top: 2px; }
-.nav { display: flex; gap: 6px; }
-.nav-btn {
-  width: 36px; height: 36px; border-radius: 50%; border: none;
-  background: #f0ede8; font-size: 16px; transition: background 0.15s;
-}
-.nav-btn.active { background: #3a3530; }
-
-.content { max-width: 480px; margin: 0 auto; padding: 16px 14px 40px; }
-
-.card {
-  background: #fff; border-radius: 16px; padding: 20px;
-  border: 1.5px solid #f0ede8; margin-bottom: 12px;
+body {
+  margin:0;
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  background:#f5f5f7;
+  color:#111;
 }
 
-/* Goal cards */
-.goal-card {
-  background: #fff; border-radius: 16px; padding: 20px 18px;
-  border: 1.5px solid #f0ede8; margin-bottom: 10px;
-  display: flex; align-items: center; gap: 16px; cursor: pointer;
-  transition: transform 0.15s, box-shadow 0.15s;
-  -webkit-user-select: none;
-}
-.goal-card:active { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(0,0,0,0.09); }
-.goal-info { flex: 1; }
-.goal-label { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: #b0aa9f; margin-bottom: 3px; }
-.goal-title { font-size: 15px; font-weight: 600; color: #3a3530; font-family: Georgia, serif; }
-.goal-sub { font-size: 12px; color: #9a9288; margin-top: 3px; }
-.goal-pct { text-align: right; }
-.goal-pct-num { font-size: 24px; font-weight: 700; font-family: Georgia, serif; }
-.goal-pct-label { font-size: 11px; color: #c0b8b0; }
-
-/* Section label */
-.section-label { font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: #b0aa9f; margin-bottom: 10px; }
-
-/* Week bar */
-.week-bar { display: flex; gap: 5px; }
-.week-day { flex: 1; text-align: center; }
-.week-day-bar { height: 32px; border-radius: 7px; background: #f0ede8; transition: background 0.3s; }
-.week-day-bar.has-workout { background: #7a9e7e; }
-.week-day-bar.is-today { box-shadow: 0 0 0 2px #7a9e7e; }
-.week-day-name { font-size: 10px; color: #c0b8b0; margin-top: 3px; }
-
-/* Log */
-.log-item { display: flex; gap: 10px; padding: 7px 0; border-bottom: 1px solid #f5f2ee; align-items: center; }
-.log-item:last-child { border-bottom: none; }
-.log-dot { width: 4px; height: 34px; border-radius: 4px; flex-shrink: 0; }
-.log-text { font-size: 13px; color: #3a3530; }
-.log-date { font-size: 11px; color: #c0b8b0; }
-.log-right { margin-left: auto; }
-
-/* Workout buttons */
-.workout-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
-.workout-btn {
-  padding: 10px 12px; border-radius: 12px; border: 1.5px solid #ede9e3;
-  background: #faf8f5; display: flex; align-items: center; gap: 7px;
-  font-size: 13px; color: #5a5248; transition: all 0.15s; text-align: left;
-}
-.workout-btn.done { border-color: #7a9e7e; background: #f0f7f1; color: #7a9e7e; font-weight: 600; }
-
-/* Progress bar */
-.progress-bar-wrap { height: 6px; background: #f0ede8; border-radius: 6px; overflow: hidden; }
-.progress-bar-fill { height: 100%; border-radius: 6px; transition: width 0.5s ease; }
-
-/* Checklist */
-.check-item {
-  display: flex; align-items: center; gap: 12px; padding: 11px 0;
-  border-bottom: 1px solid #f5f2ee; cursor: pointer; -webkit-user-select: none;
-}
-.check-item:last-of-type { border-bottom: none; }
-.check-circle {
-  width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0;
-  border: 2px solid #d0c8be; background: transparent;
-  display: flex; align-items: center; justify-content: center;
-  transition: all 0.2s; font-size: 12px; color: #fff;
-}
-.check-circle.done { background: #b5956a; border-color: #b5956a; }
-.check-circle.square { border-radius: 6px; }
-.check-circle.square.done { background: #7a8ea8; border-color: #7a8ea8; }
-.check-label { font-size: 14px; color: #3a3530; }
-.check-label.done { color: #9a9288; text-decoration: line-through; }
-
-/* Input row */
-.input-row { display: flex; gap: 8px; margin-top: 10px; }
-.input-row input {
-  flex: 1; padding: 8px 12px; border-radius: 10px;
-  border: 1.5px solid #ede9e3; font-size: 13px; background: #faf8f5;
-  outline: none; color: #3a3530;
-}
-.input-row button {
-  padding: 8px 14px; border-radius: 10px; border: none;
-  background: #3a3530; color: #fff; font-size: 16px;
+.container{
+  max-width:720px;
+  margin:0 auto;
+  padding:20px;
 }
 
-/* Big stat */
-.big-stat { font-size: 30px; font-weight: 700; font-family: Georgia, serif; }
-.stat-row { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 14px; }
-.stat-label { font-size: 13px; color: #9a9288; margin-bottom: 2px; }
+.card{
+  background:white;
+  border-radius:16px;
+  padding:16px;
+  margin-bottom:12px;
+  box-shadow:0 6px 20px rgba(0,0,0,0.06);
+}
 
-.hint { font-size: 12px; color: #b0aa9f; margin-bottom: 10px; }
+h1{
+  font-size:22px;
+}
 
-svg text { font-family: -apple-system, system-ui, sans-serif; }
+input, textarea{
+  width:100%;
+  padding:10px;
+  border-radius:10px;
+  border:1px solid #ddd;
+  margin-top:8px;
+  font-size:14px;
+}
+
+button{
+  padding:10px 14px;
+  border:none;
+  border-radius:10px;
+  background:#111;
+  color:white;
+  margin-top:8px;
+}
+
+.task{
+  display:flex;
+  justify-content:space-between;
+  padding:8px 0;
+  border-bottom:1px solid #eee;
+}
+
+.small{
+  font-size:12px;
+  opacity:0.6;
+}
 </style>
 </head>
+
 <body>
 
-<div id="toast"></div>
+<div class="container">
 
-<div class="header">
-  <div>
-    <div class="header-title">Мои цели</div>
-    <div class="header-date" id="header-date"></div>
-  </div>
-  <nav class="nav">
-    <button class="nav-btn active" data-view="dashboard" onclick="switchView('dashboard')" title="Дашборд">📊</button>
-    <button class="nav-btn" data-view="fitness" onclick="switchView('fitness')" title="Фигура">🧘</button>
-    <button class="nav-btn" data-view="work" onclick="switchView('work')" title="Работа">💼</button>
-    <button class="nav-btn" data-view="home" onclick="switchView('home')" title="Дом">🏠</button>
-    <button class="nav-btn" data-view="log" onclick="switchView('log')" title="Дневник">📋</button>
-  </nav>
+<h1>📊 Goal Planner</h1>
+<div class="small">Сегодня — твоя система управления днём</div>
+
+<div class="card">
+  <h3>🎯 Главная цель дня</h3>
+  <input id="goal" placeholder="Например: закрыть проект / спорт / фокус день" />
 </div>
 
-<div class="content" id="content"></div>
+<div class="card">
+  <h3>⭐ Приоритеты (3)</h3>
+  <input id="p1" placeholder="Приоритет 1" />
+  <input id="p2" placeholder="Приоритет 2" />
+  <input id="p3" placeholder="Приоритет 3" />
+</div>
+
+<div class="card">
+  <h3>✅ Задачи</h3>
+  <input id="taskInput" placeholder="Добавить задачу..." />
+  <button onclick="addTask()">Добавить</button>
+  <div id="tasks"></div>
+</div>
+
+<div class="card">
+  <h3>📝 Заметки</h3>
+  <textarea id="notes" rows="4" placeholder="Идеи, мысли, инсайты..."></textarea>
+</div>
+
+</div>
 
 <script>
-const STORAGE_KEY = 'goals-dashboard-v1';
-const COLORS = { fitness: '#7a9e7e', work: '#b5956a', home: '#7a8ea8' };
-const WORKOUTS = [
-  { id: 'pilates', label: 'Пилатес', emoji: '🧘' },
-  { id: 'cardio', label: 'Кардио', emoji: '🏃' },
-  { id: 'strength', label: 'Силовая', emoji: '💪' },
-  { id: 'yoga', label: 'Йога', emoji: '🌿' },
-  { id: 'walk', label: 'Прогулка', emoji: '🚶' },
-];
 
-let currentView = 'dashboard';
-let state;
+// ---------- STATE ----------
+let tasks = JSON.parse(localStorage.getItem("tasks") || "[]");
 
-const defaultState = {
-  fitness: { workouts: [], streak: 0, lastDate: null },
-  work: { stages: [
-    { id: 1, label: 'Разработка и тестирование', done: false },
-    { id: 2, label: 'Согласование с командой', done: false },
-    { id: 3, label: 'Пилотный запуск', done: false },
-    { id: 4, label: 'Обучение пользователей', done: false },
-    { id: 5, label: 'Ввод в эксплуатацию', done: false },
-  ]},
-  home: { tasks: [
-    { id: 1, label: 'Завершить отделку', done: false },
-    { id: 2, label: 'Установить мебель', done: false },
-    { id: 3, label: 'Подключить технику', done: false },
-    { id: 4, label: 'Разобрать вещи', done: false },
-    { id: 5, label: 'Переехать 🎉', done: false },
-  ]},
-  log: []
-};
-
-function todayStr() { return new Date().toISOString().split('T')[0]; }
-
-function formatDate(str) {
-  return new Date(str).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
+// ---------- SAVE ----------
+function save(){
+  localStorage.setItem("tasks", JSON.stringify(tasks));
+  localStorage.setItem("goal", goal.value);
+  localStorage.setItem("p1", p1.value);
+  localStorage.setItem("p2", p2.value);
+  localStorage.setItem("p3", p3.value);
+  localStorage.setItem("notes", notes.value);
 }
 
-function load() {
-  try { state = JSON.parse(localStorage.getItem(STORAGE_KEY)) || JSON.parse(JSON.stringify(defaultState)); }
-  catch { state = JSON.parse(JSON.stringify(defaultState)); }
+// ---------- LOAD ----------
+goal.value = localStorage.getItem("goal") || "";
+p1.value = localStorage.getItem("p1") || "";
+p2.value = localStorage.getItem("p2") || "";
+p3.value = localStorage.getItem("p3") || "";
+notes.value = localStorage.getItem("notes") || "";
+
+// ---------- TASKS ----------
+function render(){
+  tasksDiv.innerHTML = "";
+  tasks.forEach((t, i) => {
+    tasksDiv.innerHTML += `
+      <div class="task">
+        <div>
+          <input type="checkbox" ${t.done ? "checked" : ""} onchange="toggle(${i})">
+          ${t.text}
+        </div>
+        <button onclick="del(${i})">✕</button>
+      </div>
+    `;
+  });
 }
 
-function save() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
-
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg; t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2500);
-}
-
-function switchView(v) {
-  currentView = v;
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.view === v));
+function addTask(){
+  const v = taskInput.value.trim();
+  if(!v) return;
+  tasks.push({text:v, done:false});
+  taskInput.value = "";
+  save();
   render();
 }
 
-// --- Computed ---
-function fitnessStats() {
-  const weekAgo = new Date(); weekAgo.setDate(weekAgo.getDate() - 6);
-  const weekWorkouts = state.fitness.workouts.filter(w => new Date(w.date) >= weekAgo).length;
-  const pct = Math.min(100, Math.round((weekWorkouts / 5) * 100));
-  return { weekWorkouts, pct };
-}
-function workStats() {
-  const done = state.work.stages.filter(s => s.done).length;
-  const total = state.work.stages.length;
-  return { done, total, pct: total ? Math.round((done/total)*100) : 0 };
-}
-function homeStats() {
-  const done = state.home.tasks.filter(t => t.done).length;
-  const total = state.home.tasks.length;
-  return { done, total, pct: total ? Math.round((done/total)*100) : 0 };
-}
-
-// --- SVG Circle ---
-function circleProgressSVG(pct, size, color, emoji) {
-  const stroke = 7, r = (size - stroke) / 2;
-  const circ = 2 * Math.PI * r;
-  const offset = circ - (pct / 100) * circ;
-  return `<svg width="${size}" height="${size}" style="display:block;flex-shrink:0">
-    <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="#f0ede8" stroke-width="${stroke}"/>
-    <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="${color}" stroke-width="${stroke}"
-      stroke-dasharray="${circ}" stroke-dashoffset="${offset}" stroke-linecap="round"
-      transform="rotate(-90 ${size/2} ${size/2})" style="transition:stroke-dashoffset 0.6s ease"/>
-    <text x="50%" y="50%" text-anchor="middle" dominant-baseline="central" font-size="18">${emoji}</text>
-  </svg>`;
-}
-
-// --- Actions ---
-function addWorkout(type, customLabel) {
-  const today = todayStr();
-  const w = WORKOUTS.find(x => x.id === type);
-  const label = customLabel || (w ? w.label : 'Тренировка');
-  const emoji = w ? w.emoji : '✨';
-  const alreadyToday = state.fitness.workouts.some(x => x.date === today);
-  let streak = state.fitness.streak || 0;
-  if (!alreadyToday) {
-    const yest = new Date(); yest.setDate(yest.getDate()-1);
-    const yStr = yest.toISOString().split('T')[0];
-    streak = (state.fitness.lastDate === yStr || state.fitness.lastDate === today) ? streak + 1 : 1;
-  }
-  state.fitness.workouts.push({ date: today, type, label, emoji });
-  state.fitness.streak = streak;
-  state.fitness.lastDate = today;
-  state.log.unshift({ date: today, text: `${emoji} ${label}`, goal: 'fitness' });
-  state.log = state.log.slice(0, 50);
-  save(); render();
-  showToast(`${emoji} ${label} — засчитано!`);
-}
-
-function toggleStage(id) {
-  const s = state.work.stages.find(x => x.id === id);
-  s.done = !s.done;
-  if (s.done) state.log.unshift({ date: todayStr(), text: `✅ ${s.label}`, goal: 'work' });
-  state.log = state.log.slice(0, 50);
-  save(); render();
-}
-
-function toggleTask(id) {
-  const t = state.home.tasks.find(x => x.id === id);
-  t.done = !t.done;
-  if (t.done) state.log.unshift({ date: todayStr(), text: `🏠 ${t.label}`, goal: 'home' });
-  state.log = state.log.slice(0, 50);
-  save(); render();
-}
-
-function addStage(label) {
-  state.work.stages.push({ id: Date.now(), label, done: false });
-  save(); render();
-}
-
-function addTask(label) {
-  state.home.tasks.push({ id: Date.now(), label, done: false });
-  save(); render();
-}
-
-// --- Render ---
-function render() {
-  const c = document.getElementById('content');
-  if (currentView === 'dashboard') c.innerHTML = renderDashboard();
-  else if (currentView === 'fitness') c.innerHTML = renderFitness();
-  else if (currentView === 'work') c.innerHTML = renderWork();
-  else if (currentView === 'home') c.innerHTML = renderHome();
-  else if (currentView === 'log') c.innerHTML = renderLog();
-  attachEvents();
-}
-
-function renderDashboard() {
-  const fs = fitnessStats(), ws = workStats(), hs = homeStats();
-  const today = todayStr();
-
-  // week bar
-  const days = ['пн','вт','ср','чт','пт','сб','вс'];
-  let weekBarHTML = '';
-  for (let i = 6; i >= 0; i--) {
-    const d = new Date(); d.setDate(d.getDate() - i);
-    const ds = d.toISOString().split('T')[0];
-    const has = state.fitness.workouts.some(w => w.date === ds);
-    const isToday = ds === today;
-    const dayName = d.toLocaleDateString('ru-RU', { weekday: 'narrow' });
-    weekBarHTML += `<div class="week-day">
-      <div class="week-day-bar${has?' has-workout':''}${isToday?' is-today':''}"></div>
-      <div class="week-day-name">${dayName}</div>
-    </div>`;
-  }
-
-  const recentLog = state.log.slice(0, 5).map(item =>
-    `<div class="log-item">
-      <div class="log-dot" style="background:${COLORS[item.goal]||'#c0b8b0'}"></div>
-      <div><div class="log-text">${item.text}</div><div class="log-date">${formatDate(item.date)}</div></div>
-    </div>`).join('');
-
-  return `
-    <p class="hint">Нажми на карточку чтобы добавить прогресс</p>
-    <div class="goal-card" onclick="switchView('fitness')">
-      ${circleProgressSVG(fs.pct, 72, COLORS.fitness, '🧘')}
-      <div class="goal-info">
-        <div class="goal-label">цель</div>
-        <div class="goal-title">Фигура</div>
-        <div class="goal-sub">${fs.weekWorkouts} трен. за неделю · стрик ${state.fitness.streak} дн.</div>
-      </div>
-      <div class="goal-pct">
-        <div class="goal-pct-num" style="color:${COLORS.fitness}">${fs.pct}%</div>
-        <div class="goal-pct-label">прогресс</div>
-      </div>
-    </div>
-    <div class="goal-card" onclick="switchView('work')">
-      ${circleProgressSVG(ws.pct, 72, COLORS.work, '💼')}
-      <div class="goal-info">
-        <div class="goal-label">цель</div>
-        <div class="goal-title">Запуск системы</div>
-        <div class="goal-sub">${ws.done} из ${ws.total} этапов</div>
-      </div>
-      <div class="goal-pct">
-        <div class="goal-pct-num" style="color:${COLORS.work}">${ws.pct}%</div>
-        <div class="goal-pct-label">прогресс</div>
-      </div>
-    </div>
-    <div class="goal-card" onclick="switchView('home')">
-      ${circleProgressSVG(hs.pct, 72, COLORS.home, '🏠')}
-      <div class="goal-info">
-        <div class="goal-label">цель</div>
-        <div class="goal-title">Ремонт и переезд</div>
-        <div class="goal-sub">${hs.done} из ${hs.total} задач</div>
-      </div>
-      <div class="goal-pct">
-        <div class="goal-pct-num" style="color:${COLORS.home}">${hs.pct}%</div>
-        <div class="goal-pct-label">прогресс</div>
-      </div>
-    </div>
-    <div class="card">
-      <div class="section-label">Тренировки — последние 7 дней</div>
-      <div class="week-bar">${weekBarHTML}</div>
-    </div>
-    ${state.log.length > 0 ? `<div class="card"><div class="section-label">Последние действия</div>${recentLog}</div>` : ''}
-  `;
-}
-
-function renderFitness() {
-  const { weekWorkouts, pct } = fitnessStats();
-  const today = todayStr();
-  const todayW = state.fitness.workouts.filter(w => w.date === today);
-
-  const btns = WORKOUTS.map(w => {
-    const done = todayW.some(t => t.type === w.id);
-    return `<button class="workout-btn${done?' done':''}" onclick="addWorkout('${w.id}')">
-      <span>${w.emoji}</span>${w.label}${done?' ✓':''}
-    </button>`;
-  }).join('');
-
-  let weekBarHTML = '';
-  for (let i = 6; i >= 0; i--) {
-    const d = new Date(); d.setDate(d.getDate() - i);
-    const ds = d.toISOString().split('T')[0];
-    const has = state.fitness.workouts.some(w => w.date === ds);
-    const isToday = ds === today;
-    const dayName = d.toLocaleDateString('ru-RU', { weekday: 'narrow' });
-    weekBarHTML += `<div class="week-day">
-      <div class="week-day-bar${has?' has-workout':''}${isToday?' is-today':''}"></div>
-      <div class="week-day-name">${dayName}</div>
-    </div>`;
-  }
-
-  const history = [...state.fitness.workouts].reverse().slice(0,10).map(w =>
-    `<div class="log-item"><div class="log-text">${w.emoji} ${w.label}</div>
-    <div class="log-right"><div class="log-date">${formatDate(w.date)}</div></div></div>`
-  ).join('');
-
-  return `
-    <div class="card">
-      <div class="section-label">Что сегодня сделала?</div>
-      <div class="workout-grid">${btns}</div>
-      <div class="input-row">
-        <input id="custom-workout" placeholder="Своё название..." onkeydown="if(event.key==='Enter')addCustomWorkout()">
-        <button onclick="addCustomWorkout()">+</button>
-      </div>
-    </div>
-    <div class="card">
-      <div class="stat-row">
-        <div><div class="stat-label">Стрик</div>
-          <div class="big-stat" style="color:${COLORS.fitness}">${state.fitness.streak} <span style="font-size:14px;font-weight:400">дн. подряд</span></div>
-        </div>
-        <div style="text-align:right"><div class="stat-label">За неделю</div>
-          <div class="big-stat" style="color:${COLORS.fitness}">${weekWorkouts} <span style="font-size:14px;font-weight:400">/ 5</span></div>
-        </div>
-      </div>
-      <div class="week-bar">${weekBarHTML}</div>
-    </div>
-    ${state.fitness.workouts.length > 0 ? `<div class="card"><div class="section-label">История</div>${history}</div>` : ''}
-  `;
-}
-
-function renderWork() {
-  const { done, total, pct } = workStats();
-  const items = state.work.stages.map(s =>
-    `<div class="check-item" onclick="toggleStage(${s.id})">
-      <div class="check-circle${s.done?' done':''}">${s.done?'✓':''}</div>
-      <span class="check-label${s.done?' done':''}">${s.label}</span>
-    </div>`
-  ).join('');
-  return `
-    <div class="card">
-      <div class="stat-row">
-        <div><div class="stat-label">Готовность системы</div>
-          <div class="big-stat" style="color:${COLORS.work}">${pct}%</div>
-        </div>
-        ${circleProgressSVG(pct, 70, COLORS.work, '💼')}
-      </div>
-      <div class="progress-bar-wrap">
-        <div class="progress-bar-fill" style="width:${pct}%;background:${COLORS.work}"></div>
-      </div>
-    </div>
-    <div class="card">
-      <div class="section-label">Этапы</div>
-      ${items}
-      <div class="input-row">
-        <input id="new-stage" placeholder="Добавить этап..." onkeydown="if(event.key==='Enter')addStageFromInput()">
-        <button onclick="addStageFromInput()">+</button>
-      </div>
-    </div>
-  `;
-}
-
-function renderHome() {
-  const { done, total, pct } = homeStats();
-  const items = state.home.tasks.map(t =>
-    `<div class="check-item" onclick="toggleTask(${t.id})">
-      <div class="check-circle square${t.done?' done':''}">${t.done?'✓':''}</div>
-      <span class="check-label${t.done?' done':''}">${t.label}</span>
-    </div>`
-  ).join('');
-  return `
-    <div class="card">
-      <div class="stat-row">
-        <div><div class="stat-label">Готовность к переезду</div>
-          <div class="big-stat" style="color:${COLORS.home}">${pct}%</div>
-        </div>
-        ${circleProgressSVG(pct, 70, COLORS.home, '🏠')}
-      </div>
-      <div class="progress-bar-wrap">
-        <div class="progress-bar-fill" style="width:${pct}%;background:${COLORS.home}"></div>
-      </div>
-    </div>
-    <div class="card">
-      <div class="section-label">Задачи</div>
-      ${items}
-      <div class="input-row">
-        <input id="new-task" placeholder="Добавить задачу..." onkeydown="if(event.key==='Enter')addTaskFromInput()">
-        <button onclick="addTaskFromInput()">+</button>
-      </div>
-    </div>
-  `;
-}
-
-function renderLog() {
-  const items = state.log.map(item =>
-    `<div class="log-item">
-      <div class="log-dot" style="background:${COLORS[item.goal]||'#c0b8b0'}"></div>
-      <div><div class="log-text">${item.text}</div><div class="log-date">${formatDate(item.date)}</div></div>
-    </div>`).join('');
-  return `<div class="card">
-    <div class="section-label">Дневник действий</div>
-    ${state.log.length === 0 ? '<p style="color:#c0b8b0;font-size:13px">Пока пусто — сделай первый шаг!</p>' : items}
-  </div>`;
-}
-
-function attachEvents() {}
-
-function addCustomWorkout() {
-  const inp = document.getElementById('custom-workout');
-  if (!inp || !inp.value.trim()) return;
-  const label = inp.value.trim();
-  addWorkout('other', label);
-}
-function addStageFromInput() {
-  const inp = document.getElementById('new-stage');
-  if (!inp || !inp.value.trim()) return;
-  addStage(inp.value.trim());
-}
-function addTaskFromInput() {
-  const inp = document.getElementById('new-task');
-  if (!inp || !inp.value.trim()) return;
-  addTask(inp.value.trim());
-}
-
-// Init
-function init() {
-  load();
-  const now = new Date();
-  document.getElementById('header-date').textContent =
-    now.toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long' });
+function toggle(i){
+  tasks[i].done = !tasks[i].done;
+  save();
   render();
 }
 
-init();
-</script>
-  <script>
-if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("service-worker.js");
+function del(i){
+  tasks.splice(i,1);
+  save();
+  render();
 }
+
+// ---------- AUTO SAVE ----------
+document.querySelectorAll("input, textarea").forEach(el=>{
+  el.addEventListener("input", save);
+});
+
+// ---------- INIT ----------
+render();
+
+// ---------- SIMPLE SERVICE WORKER (INLINE PWA) ----------
+const swCode = 
+self.addEventListener('install', e => self.skipWaiting());
+self.addEventListener('fetch', e => {});
+`;
+
+const blob = new Blob([swCode], {type:"application/javascript"});
+const swUrl = URL.createObjectURL(blob);
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register(swUrl);
+}
+
 </script>
+
 </body>
 </html>
