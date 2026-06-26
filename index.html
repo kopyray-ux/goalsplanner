@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+
+<title>Goal Planner</title>
+
+<!-- PWA manifest (inline) -->
+<link rel="manifest" href="data:application/json,{
+  &quot;name&quot;:&quot;Goal Planner&quot;,
+  &quot;short_name&quot;:&quot;Planner&quot;,
+  &quot;start_url&quot;:&quot;.&quot;,
+  &quot;display&quot;:&quot;standalone&quot;,
+  &quot;background_color&quot;:&quot;#ffffff&quot;,
+  &quot;theme_color&quot;:&quot;#111111&quot;,
+  &quot;icons&quot;:[{
+    &quot;src&quot;:&quot;https://cdn-icons-png.flaticon.com/512/1828/1828817.png&quot;,
+    &quot;sizes&quot;:&quot;512x512&quot;,
+    &quot;type&quot;:&quot;image/png&quot;
+  }]
+}" />
+
+<meta name="theme-color" content="#111111" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black" />
+
+<style>
+body {
+  margin:0;
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  background:#f5f5f7;
+  color:#111;
+}
+
+.container{
+  max-width:720px;
+  margin:0 auto;
+  padding:20px;
+}
+
+.card{
+  background:white;
+  border-radius:16px;
+  padding:16px;
+  margin-bottom:12px;
+  box-shadow:0 6px 20px rgba(0,0,0,0.06);
+}
+
+h1{
+  font-size:22px;
+}
+
+input, textarea{
+  width:100%;
+  padding:10px;
+  border-radius:10px;
+  border:1px solid #ddd;
+  margin-top:8px;
+  font-size:14px;
+}
+
+button{
+  padding:10px 14px;
+  border:none;
+  border-radius:10px;
+  background:#111;
+  color:white;
+  margin-top:8px;
+}
+
+.task{
+  display:flex;
+  justify-content:space-between;
+  padding:8px 0;
+  border-bottom:1px solid #eee;
+}
+
+.small{
+  font-size:12px;
+  opacity:0.6;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>📊 Goal Planner</h1>
+<div class="small">Сегодня — твоя система управления днём</div>
+
+<div class="card">
+  <h3>🎯 Главная цель дня</h3>
+  <input id="goal" placeholder="Например: закрыть проект / спорт / фокус день" />
+</div>
+
+<div class="card">
+  <h3>⭐ Приоритеты (3)</h3>
+  <input id="p1" placeholder="Приоритет 1" />
+  <input id="p2" placeholder="Приоритет 2" />
+  <input id="p3" placeholder="Приоритет 3" />
+</div>
+
+<div class="card">
+  <h3>✅ Задачи</h3>
+  <input id="taskInput" placeholder="Добавить задачу..." />
+  <button onclick="addTask()">Добавить</button>
+  <div id="tasks"></div>
+</div>
+
+<div class="card">
+  <h3>📝 Заметки</h3>
+  <textarea id="notes" rows="4" placeholder="Идеи, мысли, инсайты..."></textarea>
+</div>
+
+</div>
+
+<script>
+
+// ---------- STATE ----------
+let tasks = JSON.parse(localStorage.getItem("tasks") || "[]");
+
+// ---------- SAVE ----------
+function save(){
+  localStorage.setItem("tasks", JSON.stringify(tasks));
+  localStorage.setItem("goal", goal.value);
+  localStorage.setItem("p1", p1.value);
+  localStorage.setItem("p2", p2.value);
+  localStorage.setItem("p3", p3.value);
+  localStorage.setItem("notes", notes.value);
+}
+
+// ---------- LOAD ----------
+goal.value = localStorage.getItem("goal") || "";
+p1.value = localStorage.getItem("p1") || "";
+p2.value = localStorage.getItem("p2") || "";
+p3.value = localStorage.getItem("p3") || "";
+notes.value = localStorage.getItem("notes") || "";
+
+// ---------- TASKS ----------
+function render(){
+  tasksDiv.innerHTML = "";
+  tasks.forEach((t, i) => {
+    tasksDiv.innerHTML += `
+      <div class="task">
+        <div>
+          <input type="checkbox" ${t.done ? "checked" : ""} onchange="toggle(${i})">
+          ${t.text}
+        </div>
+        <button onclick="del(${i})">✕</button>
+      </div>
+    `;
+  });
+}
+
+function addTask(){
+  const v = taskInput.value.trim();
+  if(!v) return;
+  tasks.push({text:v, done:false});
+  taskInput.value = "";
+  save();
+  render();
+}
+
+function toggle(i){
+  tasks[i].done = !tasks[i].done;
+  save();
+  render();
+}
+
+function del(i){
+  tasks.splice(i,1);
+  save();
+  render();
+}
+
+// ---------- AUTO SAVE ----------
+document.querySelectorAll("input, textarea").forEach(el=>{
+  el.addEventListener("input", save);
+});
+
+// ---------- INIT ----------
+render();
+
+// ---------- SIMPLE SERVICE WORKER (INLINE PWA) ----------
+const swCode = 
+self.addEventListener('install', e => self.skipWaiting());
+self.addEventListener('fetch', e => {});
+`;
+
+const blob = new Blob([swCode], {type:"application/javascript"});
+const swUrl = URL.createObjectURL(blob);
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register(swUrl);
+}
+
+</script>
+
+</body>
+</html>
